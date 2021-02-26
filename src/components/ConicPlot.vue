@@ -5,9 +5,11 @@ import { defineComponent } from 'vue'
 
 const ConicPlot = defineComponent({
   animation: 0,
+  previousTouches: null,
   data: () =>
     ({} as {
       animation: number
+      previousDist: number | null
       $refs: { canvas: HTMLCanvasElement }
     }),
 
@@ -49,7 +51,6 @@ const ConicPlot = defineComponent({
       const ctx = canvas.getContext('2d')
 
       if (ctx) {
-        // const s = performance.now()
         ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
 
         drawGrid(ctx, {
@@ -62,19 +63,37 @@ const ConicPlot = defineComponent({
         ctx.strokeStyle = 'white'
         ctx.lineWidth = 3
         ctx.stroke(this.path)
-        // console.log(
-        //   (Math.round((performance.now() - s) * 1000) / 1000 + '').padEnd(
-        //     5,
-        //     '0',
-        //   ),
-        // )
       }
 
       this.animation = requestAnimationFrame(this.draw)
     },
-    scale(e: WheelEvent) {
+    distance(x1: number, y1: number, x2: number, y2: number) {
+      return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    },
+    onWheel(e: WheelEvent) {
       e.preventDefault()
+      console.log(e.deltaY)
       this.$store.commit('scale', e.deltaY / 1000 + 1)
+    },
+    onTouchOrMove(e: TouchEvent) {
+      if (e.touches.length !== 2) return
+      e.preventDefault()
+
+      const [t1, t2] = e.touches
+      const distance = this.distance(
+        t1.clientX,
+        t1.clientY,
+        t2.clientX,
+        t2.clientY,
+      )
+      if (this.previousDist === null) {
+        this.previousDist = distance
+      } else {
+        this.$store.commit('scale', (distance - this.previousDist) / 200 + 1)
+      }
+    },
+    ontouchend() {
+      this.previousDist = null
     },
   },
 
@@ -92,7 +111,7 @@ export default ConicPlot
 </script>
 
 <template>
-  <canvas ref="canvas" class="conic-plot" @wheel="scale" />
+  <canvas ref="canvas" class="conic-plot" @wheel="onWheel" />
 </template>
 
 <style scoped>

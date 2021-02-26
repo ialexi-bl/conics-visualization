@@ -63,7 +63,8 @@ body,
   display: flex;
   height: 100%;
   background: #111;
-  max-width: 35%;
+  width: 45%;
+  max-width: 60vmin;
 }
 .sidebar {
   flex: 1;
@@ -84,7 +85,7 @@ body,
   .sidebar-container {
     flex-direction: column-reverse;
     max-height: 50%;
-    max-width: 100%;
+    width: 100%;
   }
   .separator {
     height: 12px;

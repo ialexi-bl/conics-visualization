@@ -1,7 +1,10 @@
 import { CoefName, CoefsMap } from '@/types'
+import { fit } from '@/util/math'
+import round from '@/util/round'
 import { State } from 'vue'
 import { createStore } from 'vuex'
 
+console.log(round(10 / Math.max(window.innerWidth, window.innerHeight), 3))
 export default createStore<State>({
   state: {
     dimensions: {
@@ -9,16 +12,16 @@ export default createStore<State>({
       canvasHeight: 1000,
       xOriginRatio: 0.5,
       yOriginRatio: 0.5,
-      spanHoriz: 20,
-      resolutionRatio: 0.008,
+      spanHoriz: 10,
+      resolutionRatio: 0.01,
     },
     coefs: {
       a11: -1,
       a12: 1,
       a22: 1,
-      a13: 0,
-      a23: 0,
-      a33: -1,
+      a13: 2,
+      a23: 3,
+      a33: 0,
     },
   },
   getters: {
@@ -70,6 +73,3 @@ export default createStore<State>({
     },
   },
 })
-
-const fit = (n: number, min: number, max: number) =>
-  Math.min(Math.max(n, min), max)

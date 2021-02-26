@@ -52,6 +52,9 @@ export default Sidebar
   flex: 1;
 }
 @media (max-width: 480px) {
+  .hr {
+    display: none;
+  }
   .quadratic-editor {
     border-right: 1px solid #444;
   }
@@ -69,7 +72,7 @@ export default Sidebar
   }
   .editors {
     flex: 1;
-    display: flex;
+    flex-direction: row;
     height: 50%;
     width: 100%;
   }

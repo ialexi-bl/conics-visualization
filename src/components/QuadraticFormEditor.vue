@@ -1,6 +1,7 @@
 <script lang="ts">
 import { withOwnFields } from '@/types'
 import drawGrid from '@/util/grid'
+import { fit } from '@/util/math'
 import drawPoint from '@/util/points'
 import round from '@/util/round'
 import { drawVectorToPoint } from '@/util/vector'
@@ -172,9 +173,9 @@ const QuadraticFormEditor = defineComponent({
       )
     },
 
-    mouseDown(e: MouseEvent) {
-      const x = e.offsetX * 2
-      const y = e.offsetY * 2
+    grab(offsetX: number, offsetY: number) {
+      const x = offsetX * 2
+      const y = offsetY * 2
       if (this.isAboveA12(x, y)) {
         this.moving = 'a12'
       } else if (this.isAboveMatrix(x, y)) {
@@ -185,9 +186,9 @@ const QuadraticFormEditor = defineComponent({
         this.moving = 'second'
       }
     },
-    mouseMove(e: MouseEvent) {
-      const x = e.offsetX * 2
-      const y = e.offsetY * 2
+    move(offsetX: number, offsetY: number) {
+      const x = offsetX * 2
+      const y = offsetY * 2
 
       if (!this.moving) {
         if (
@@ -234,8 +235,36 @@ const QuadraticFormEditor = defineComponent({
         this.draw()
       }
     },
-    mouseUp() {
+    release() {
       this.moving = false
+    },
+
+    mouseDown(e: MouseEvent) {
+      this.grab(e.offsetX, e.offsetY)
+    },
+    mouseMove(e: MouseEvent) {
+      this.move(e.offsetX, e.offsetY)
+    },
+
+    touchStart(e: TouchEvent) {
+      if (e.touches.length !== 1) return
+      const [touch] = e.touches
+      e.preventDefault()
+
+      const { left, top } = this.$refs.canvas.getBoundingClientRect()
+      this.grab(touch.clientX - left, touch.clientY - top)
+    },
+    touchMove(e: TouchEvent) {
+      if (e.touches.length !== 1) return
+      const [touch] = e.touches
+      e.preventDefault()
+
+      const { left, top } = this.$refs.canvas.getBoundingClientRect()
+      const { clientWidth, clientHeight } = this.$refs.canvas
+      this.move(
+        fit(touch.clientX - left, 0, clientWidth),
+        fit(touch.clientY - top, 0, clientHeight),
+      )
     },
   },
 
@@ -261,7 +290,10 @@ export default QuadraticFormEditor
       :class="{ ready: abovePoint }"
       @mousedown="mouseDown"
       @mousemove="mouseMove"
-      @mouseup="mouseUp"
+      @mouseup="release"
+      @touchstart="touchStart"
+      @touchmove="touchMove"
+      @touchend="release"
     />
   </div>
 </template>

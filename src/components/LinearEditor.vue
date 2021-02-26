@@ -1,6 +1,7 @@
 <script lang="ts">
 import { withOwnFields } from '@/types'
 import drawGrid from '@/util/grid'
+import { fit } from '@/util/math'
 import round from '@/util/round'
 import { drawVectorToPoint } from '@/util/vector'
 import { defineComponent } from 'vue'
@@ -93,37 +94,55 @@ const LinearEditor = defineComponent({
       )
     },
 
-    mouseDown(e: MouseEvent) {
-      if (this.isAbovePoint(e.offsetX * 2, e.offsetY * 2)) {
+    grab(offsetX: number, offsetY: number) {
+      if (this.isAbovePoint(offsetX * 2, offsetY * 2)) {
         this.moving = true
       }
     },
-    mouseMove(e: MouseEvent) {
-      const x = e.offsetX * 2
-      const y = e.offsetY * 2
+    move(offsetX: number, offsetY: number) {
+      const x = offsetX * 2
+      const y = offsetY * 2
 
+      let xCoord = (x - this.xOrigin) / this.xCoordScale
+      let yCoord = (this.yOrigin - y) / this.yCoordScale
+      if (
+        abs(round(xCoord) - xCoord) < 0.2 &&
+        abs(round(yCoord) - yCoord) < 0.2
+      ) {
+        xCoord = round(xCoord)
+        yCoord = round(yCoord)
+      }
+      this.$store.dispatch('setLinearCoefs', { x: xCoord, y: yCoord })
+      this.draw()
+    },
+    release() {
+      this.moving = false
+    },
+    mouseDown(e: MouseEvent) {
+      this.grab(e.offsetX, e.offsetY)
+    },
+    mouseMove(e: MouseEvent) {
       if (!this.moving) {
-        if (this.isAbovePoint(x, y)) {
+        if (this.isAbovePoint(e.offsetX * 2, e.offsetY * 2)) {
           this.abovePoint = true
         } else {
           this.abovePoint = false
         }
       } else {
-        let xCoord = (x - this.xOrigin) / this.xCoordScale
-        let yCoord = (this.yOrigin - y) / this.yCoordScale
-        if (
-          abs(round(xCoord) - xCoord) < 0.2 &&
-          abs(round(yCoord) - yCoord) < 0.2
-        ) {
-          xCoord = round(xCoord)
-          yCoord = round(yCoord)
-        }
-        this.$store.dispatch('setLinearCoefs', { x: xCoord, y: yCoord })
-        this.draw()
+        this.move(e.offsetX, e.offsetY)
       }
     },
-    mouseUp() {
-      this.moving = false
+    touchMove(e: TouchEvent) {
+      if (e.touches.length !== 1) return
+      const [touch] = e.touches
+      e.preventDefault()
+
+      const { left, top } = this.$refs.canvas.getBoundingClientRect()
+      const { clientWidth, clientHeight } = this.$refs.canvas
+      this.move(
+        fit(touch.clientX - left, 0, clientWidth),
+        fit(touch.clientY - top, 0, clientHeight),
+      )
     },
   },
   mounted() {
@@ -147,7 +166,8 @@ export default LinearEditor
       :class="{ ready: abovePoint }"
       @mousedown="mouseDown"
       @mousemove="mouseMove"
-      @mouseup="mouseUp"
+      @mouseup="release"
+      @touchmove="touchMove"
     />
   </div>
 </template>

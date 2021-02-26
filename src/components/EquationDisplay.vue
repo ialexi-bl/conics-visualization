@@ -59,6 +59,7 @@ export default EquationDisplay
 @media (max-width: 1040px) {
   .equation-display {
     font-size: 1rem;
+    margin-top: 0.5rem;
   }
 }
 </style>
